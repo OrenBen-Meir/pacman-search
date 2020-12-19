@@ -166,12 +166,11 @@ def breadthFirstSearch(problem):
     while not opened_que.isEmpty() and goal_node == None:
         node = opened_que.pop()
         visited_states.add(node.state)
-        successor_nodes = node.successor_nodes(visited_states.union([x.state for x in opened_que.list]))
-        for s_node in successor_nodes:
-            if problem.isGoalState(s_node.state):
-                goal_node = s_node
-                break
-            else:
+        if problem.isGoalState(node.state):
+            goal_node = node
+        else:
+            successor_nodes = node.successor_nodes(visited_states.union([x.state for x in opened_que.list]))
+            for s_node in successor_nodes:
                 opened_que.push(s_node)
     movements = []
     curr_node = goal_node
