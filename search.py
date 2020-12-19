@@ -96,7 +96,7 @@ def depthFirstSearch(problem):
             self.direction = direction
             self.parent_node = parent_node
         def __str__(self):
-            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
+            return f"({self.state}, {self.direction}, {self.parent_node != None})"
 
     visited_states = set()
     goal_node = None
@@ -135,7 +135,7 @@ def breadthFirstSearch(problem):
             self.direction = direction
             self.parent_node = parent_node
         def __str__(self):
-            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
+            return f"({self.state}, {self.direction}, {self.parent_node != None})"
 
     visited_states = set()
     goal_node = None
