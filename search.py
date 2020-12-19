@@ -149,7 +149,47 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    start_state = problem.getStartState()
+    if problem.isGoalState(start_state):
+        return []
+    class Node:
+        def __init__(self, state, direction = None, total_cost=0, parent_node = None):
+            self.state = state
+            self.direction = direction
+            self.total_cost = total_cost
+            self.parent_node = parent_node
+        def __str__(self):
+            return f"({self.state}, {self.direction}, {self.total_cost}) <- {self.parent_node}"
+
+    visited_states = set()
+    best_goal_node = None
+    opened_que = util.PriorityQueueWithFunction(lambda x: x.total_cost)
+    opened_que.push(Node(start_state))
+    # print(problem.getSuccessors(start_state))
+    
+    while not opened_que.isEmpty():
+        node = opened_que.pop()
+        visited_states.add(node.state)
+        if best_goal_node != None and node.total_cost >= best_goal_node.total_cost:
+            continue
+        successor_nodes = [Node(x[0], x[1], node.total_cost + x[2], node) \
+            for x in problem.getSuccessors(node.state) if x[0] not in visited_states]
+
+        for s_node in successor_nodes:
+            if problem.isGoalState(s_node.state) and (best_goal_node == None or s_node.total_cost < best_goal_node.total_cost):
+                best_goal_node = s_node
+                print(best_goal_node)
+            else:
+                opened_que.push(s_node)
+
+    movements = []
+    curr_node = best_goal_node
+    while curr_node.parent_node != None:
+        movements.append(curr_node.direction)
+        curr_node = curr_node.parent_node
+    movements.reverse()
+    return movements
+    # util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
     """
