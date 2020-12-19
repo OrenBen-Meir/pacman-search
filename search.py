@@ -87,24 +87,39 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    parent_directions_stack = util.Stack()
-    taken_nodes = set()
-    state = problem.getStartState()
-    while not problem.isGoalState(state):
-        taken_nodes.add(state)
-        successors = problem.getSuccessors(state)
-        available_successors = [x for x in successors if x[0] not in taken_nodes]
-        if len(available_successors) == 0:
-            if parent_directions_stack.isEmpty():
-                return movements
-            parent = parent_directions_stack.pop()
-            state = parent[0]
+    start_state = problem.getStartState()
+    if problem.isGoalState(start_state):
+        return []
+    class Node:
+        def __init__(self, state, direction = None, total_cost=0, parent_node = None):
+            self.state = state
+            self.direction = direction
+            self.parent_node = parent_node
+        def __str__(self):
+            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
+
+    visited_states = set()
+    goal_node = None
+
+    node = Node(start_state)
+    while not problem.isGoalState(node.state):
+        visited_states.add(node.state)
+        successors = [Node(x[0], direction=x[1], parent_node=node) \
+            for x in problem.getSuccessors(node.state) if x[0] not in visited_states]
+
+        if len(successors) == 0:
+            if node.parent_node != None:
+                node = node.parent_node
+            else:
+                return []
         else:
-            candidate_successor = available_successors[len(available_successors)-1]
-            direction = candidate_successor[1]
-            parent_directions_stack.push((state, direction))
-            state = candidate_successor[0]
-    movements = [x[1] for x in  parent_directions_stack.list]
+            node = successors[len(successors) - 1]
+    
+    movements = []
+    while node.parent_node != None:
+        movements.append(node.direction)
+        node = node.parent_node
+    movements.reverse()
     return movements
     # util.raiseNotDefined()
 
@@ -120,7 +135,7 @@ def breadthFirstSearch(problem):
             self.direction = direction
             self.parent_node = parent_node
         def __str__(self):
-            return f"({self.state}, {self.direction}, {self.total_cost}) <- {self.parent_node}"
+            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
 
     visited_states = set()
     goal_node = None
@@ -162,7 +177,9 @@ def uniformCostSearch(problem):
             self.total_cost = total_cost
             self.parent_node = parent_node
         def __str__(self):
-            return f"({self.state}, {self.direction}, {self.total_cost}) <- {self.parent_node}"
+            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
+        def __repr__(self):
+            return str(self)
 
     visited_states = set()
     best_goal_node = None
@@ -172,6 +189,8 @@ def uniformCostSearch(problem):
     
     while not opened_que.isEmpty():
         node = opened_que.pop()
+        if node.state in visited_states:
+            continue
         visited_states.add(node.state)
         if best_goal_node != None and node.total_cost >= best_goal_node.total_cost:
             continue
