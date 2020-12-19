@@ -87,7 +87,7 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    parents_stack = util.Stack()
+    parent_directions_stack = util.Stack()
     taken_nodes = set()
     state = problem.getStartState()
     while not problem.isGoalState(state):
@@ -95,53 +95,56 @@ def depthFirstSearch(problem):
         successors = problem.getSuccessors(state)
         available_successors = [x for x in successors if x[0] not in taken_nodes]
         if len(available_successors) == 0:
-            if parents_stack.isEmpty():
+            if parent_directions_stack.isEmpty():
                 return movements
-            parent = parents_stack.pop()
+            parent = parent_directions_stack.pop()
             state = parent[0]
         else:
             candidate_successor = available_successors[len(available_successors)-1]
             direction = candidate_successor[1]
-            parents_stack.push((state, direction))
+            parent_directions_stack.push((state, direction))
             state = candidate_successor[0]
-    movements = [x[1] for x in  parents_stack.list]
+    movements = [x[1] for x in  parent_directions_stack.list]
     return movements
     # util.raiseNotDefined()
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    taken_nodes = set()
-    if problem.isGoalState(problem.getStartState()):
+    start_state = problem.getStartState()
+    if problem.isGoalState(start_state):
         return []
-    # [ [(state, direction, cost, parent_index)], [(...), (...), ...], ...] 
-    # where parent_index refers to the above array/level in the tree 
-    # such that it is the location of the parent in the form array[parent_index]
-    bfs_tree = [[(problem.getStartState(), None, 0, None)]]
-    goal_level_index = -1
-    while goal_level_index <= -1:
-        successor_level = []
-        num_states_originally_taken = len(taken_nodes)
-        for parent_index, parent_state_info in enumerate(bfs_tree[len(bfs_tree) - 1]): 
-            available_successors = [x for x in problem.getSuccessors(parent_state_info[0]) if x[0] not in taken_nodes]
-            for successor in available_successors:
-                successor_state_info = (successor[0], successor[1], successor[2], parent_index)
-                successor_level.append(successor_state_info)
-                taken_nodes.add(successor_state_info[0])
-                if problem.isGoalState(successor_state_info[0]):
-                    goal_level_index = len(successor_level) - 1
-                    break
-        if len(taken_nodes) == num_states_originally_taken:
-            return []
-        bfs_tree.append(successor_level)
+    class Node:
+        def __init__(self, state, direction = None, total_cost=0, parent_node = None):
+            self.state = state
+            self.direction = direction
+            self.parent_node = parent_node
+        def __str__(self):
+            return f"({self.state}, {self.direction}, {self.total_cost}) <- {self.parent_node}"
+
+    visited_states = set()
+    goal_node = None
+    opened_que = util.Queue()
+    opened_que.push(Node(start_state))
+    # print(problem.getSuccessors(start_state))
+    
+    while not opened_que.isEmpty() and goal_node == None:
+        node = opened_que.pop()
+        visited_states.add(node.state)
+        successor_nodes = [Node(x[0], direction=x[1], parent_node=node) \
+            for x in problem.getSuccessors(node.state) if x[0] not in visited_states]
+
+        for s_node in successor_nodes:
+            if problem.isGoalState(s_node.state):
+                goal_node = s_node
+                break
+            else:
+                opened_que.push(s_node)
     movements = []
-    level, i = len(bfs_tree)-1, goal_level_index
-    goal_state_info = bfs_tree[level][i] 
-    while goal_state_info[1] != None:
-        movements.append(goal_state_info[1])
-        level -= 1
-        i = goal_state_info[3]
-        goal_state_info = bfs_tree[level][i] 
+    curr_node = goal_node
+    while curr_node != None and curr_node.parent_node != None:
+        movements.append(curr_node.direction)
+        curr_node = curr_node.parent_node
     movements.reverse()
     return movements
     # util.raiseNotDefined()
@@ -172,13 +175,12 @@ def uniformCostSearch(problem):
         visited_states.add(node.state)
         if best_goal_node != None and node.total_cost >= best_goal_node.total_cost:
             continue
-        successor_nodes = [Node(x[0], x[1], node.total_cost + x[2], node) \
+        successor_nodes = [Node(x[0], direction=x[1], total_cost=node.total_cost + x[2], parent_node=node) \
             for x in problem.getSuccessors(node.state) if x[0] not in visited_states]
 
         for s_node in successor_nodes:
             if problem.isGoalState(s_node.state) and (best_goal_node == None or s_node.total_cost < best_goal_node.total_cost):
                 best_goal_node = s_node
-                print(best_goal_node)
             else:
                 opened_que.push(s_node)
 
