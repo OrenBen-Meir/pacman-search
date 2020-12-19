@@ -91,12 +91,23 @@ def depthFirstSearch(problem):
     if problem.isGoalState(start_state):
         return []
     class Node:
-        def __init__(self, state, direction = None, total_cost=0, parent_node = None):
+        def __init__(self, state, direction = None, total_cost = 0, parent_node = None):
             self.state = state
             self.direction = direction
+            self.total_cost = total_cost
             self.parent_node = parent_node
+            self._successor = None
+        def successor_nodes(self, visited_states):
+            if self._successor != None:
+                self._successor = [x for x in self._successor if x.state not in visited_states]
+            else: 
+                self._successor = [Node(x[0], direction=x[1], parent_node=self) \
+                    for x in problem.getSuccessors(self.state) if x[0] not in visited_states]
+            return self._successor
         def __str__(self):
-            return f"({self.state}, {self.direction}, {self.parent_node != None})"
+            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
+        def __repr__(self):
+            return str(self)
 
     visited_states = set()
     goal_node = None
@@ -104,8 +115,7 @@ def depthFirstSearch(problem):
     node = Node(start_state)
     while not problem.isGoalState(node.state):
         visited_states.add(node.state)
-        successors = [Node(x[0], direction=x[1], parent_node=node) \
-            for x in problem.getSuccessors(node.state) if x[0] not in visited_states]
+        successors = node.successor_nodes(visited_states)
 
         if len(successors) == 0:
             if node.parent_node != None:
@@ -130,24 +140,33 @@ def breadthFirstSearch(problem):
     if problem.isGoalState(start_state):
         return []
     class Node:
-        def __init__(self, state, direction = None, total_cost=0, parent_node = None):
+        def __init__(self, state, direction = None, total_cost = 0, parent_node = None):
             self.state = state
             self.direction = direction
+            self.total_cost = total_cost
             self.parent_node = parent_node
+            self._successor = None
+        def successor_nodes(self, visited_states):
+            if self._successor != None:
+                self._successor = [x for x in self._successor if x.state not in visited_states]
+            else: 
+                self._successor = [Node(x[0], direction=x[1], parent_node=self) \
+                    for x in problem.getSuccessors(self.state) if x[0] not in visited_states]
+            return self._successor
         def __str__(self):
-            return f"({self.state}, {self.direction}, {self.parent_node != None})"
+            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
+        def __repr__(self):
+            return str(self)
 
     visited_states = set()
     goal_node = None
     opened_que = util.Queue()
     opened_que.push(Node(start_state))
-    # print(problem.getSuccessors(start_state))
     
     while not opened_que.isEmpty() and goal_node == None:
         node = opened_que.pop()
         visited_states.add(node.state)
-        successor_nodes = [Node(x[0], direction=x[1], parent_node=node) \
-            for x in problem.getSuccessors(node.state) if x[0] not in visited_states]
+        successor_nodes = node.successor_nodes(visited_states)
 
         for s_node in successor_nodes:
             if problem.isGoalState(s_node.state):
@@ -171,11 +190,19 @@ def uniformCostSearch(problem):
     if problem.isGoalState(start_state):
         return []
     class Node:
-        def __init__(self, state, direction = None, total_cost=0, parent_node = None):
+        def __init__(self, state, direction = None, total_cost = 0, parent_node = None):
             self.state = state
             self.direction = direction
             self.total_cost = total_cost
             self.parent_node = parent_node
+            self._successor = None
+        def successor_nodes(self, visited_states):
+            if self._successor != None:
+                self._successor = [x for x in self._successor if x.state not in visited_states]
+            else: 
+                self._successor = [Node(x[0], direction=x[1], total_cost=self.total_cost + x[2], parent_node=self) \
+                    for x in problem.getSuccessors(self.state) if x[0] not in visited_states]
+            return self._successor
         def __str__(self):
             return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
         def __repr__(self):
@@ -185,7 +212,6 @@ def uniformCostSearch(problem):
     best_goal_node = None
     opened_que = util.PriorityQueueWithFunction(lambda x: x.total_cost)
     opened_que.push(Node(start_state))
-    # print(problem.getSuccessors(start_state))
     
     while not opened_que.isEmpty():
         node = opened_que.pop()
@@ -194,8 +220,7 @@ def uniformCostSearch(problem):
         visited_states.add(node.state)
         if best_goal_node != None and node.total_cost >= best_goal_node.total_cost:
             continue
-        successor_nodes = [Node(x[0], direction=x[1], total_cost=node.total_cost + x[2], parent_node=node) \
-            for x in problem.getSuccessors(node.state) if x[0] not in visited_states]
+        successor_nodes = node.successor_nodes(visited_states)
 
         for s_node in successor_nodes:
             if problem.isGoalState(s_node.state) and (best_goal_node == None or s_node.total_cost < best_goal_node.total_cost):
