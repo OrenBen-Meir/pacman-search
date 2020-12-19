@@ -98,7 +98,6 @@ def depthFirstSearch(problem):
             if parents_stack.isEmpty():
                 return movements
             parent = parents_stack.pop()
-            direction = [x for x in successors if x[0] == parent[0]][0][1]
             state = parent[0]
         else:
             candidate_successor = available_successors[len(available_successors)-1]
@@ -112,7 +111,40 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    taken_nodes = set()
+    if problem.isGoalState(problem.getStartState()):
+        return []
+    # [ [(state, direction, cost, parent_index)], [(...), (...), ...], ...] 
+    # where parent_index refers to the above array/level in the tree 
+    # such that it is the location of the parent in the form array[parent_index]
+    bfs_tree = [[(problem.getStartState(), None, 0, None)]]
+    goal_level_index = -1
+    while goal_level_index <= -1:
+        successor_level = []
+        num_states_originally_taken = len(taken_nodes)
+        for parent_index, parent_state_info in enumerate(bfs_tree[len(bfs_tree) - 1]): 
+            available_successors = [x for x in problem.getSuccessors(parent_state_info[0]) if x[0] not in taken_nodes]
+            for successor in available_successors:
+                successor_state_info = (successor[0], successor[1], successor[2], parent_index)
+                successor_level.append(successor_state_info)
+                taken_nodes.add(successor_state_info[0])
+                if problem.isGoalState(successor_state_info[0]):
+                    goal_level_index = len(successor_level) - 1
+                    break
+        if len(taken_nodes) == num_states_originally_taken:
+            return []
+        bfs_tree.append(successor_level)
+    movements = []
+    level, i = len(bfs_tree)-1, goal_level_index
+    goal_state_info = bfs_tree[level][i] 
+    while goal_state_info[1] != None:
+        movements.append(goal_state_info[1])
+        level -= 1
+        i = goal_state_info[3]
+        goal_state_info = bfs_tree[level][i] 
+    movements.reverse()
+    return movements
+    # util.raiseNotDefined()
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
