@@ -277,8 +277,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         if node.state in visited_states:
             continue
         visited_states.add(node.state)
-        if best_goal_node != None and node.total_cost >= best_goal_node.total_cost:
-            continue
+        if best_goal_node != None and node.total_cost + heuristic(node.state, problem) >= best_goal_node.total_cost:
+            break
         successor_nodes = node.successor_nodes(visited_states)
 
         for s_node in successor_nodes:
@@ -294,7 +294,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         curr_node = curr_node.parent_node
     movements.reverse()
     return movements
-    util.raiseNotDefined()
+    # util.raiseNotDefined()
 
 
 # Abbreviations
