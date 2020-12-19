@@ -245,6 +245,55 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+    start_state = problem.getStartState()
+    if problem.isGoalState(start_state):
+        return []
+    class Node:
+        def __init__(self, state, direction = None, total_cost = 0, parent_node = None):
+            self.state = state
+            self.direction = direction
+            self.total_cost = total_cost
+            self.parent_node = parent_node
+            self._successor = None
+        def successor_nodes(self, visited_states):
+            if self._successor != None:
+                self._successor = [x for x in self._successor if x.state not in visited_states]
+            else: 
+                self._successor = [Node(x[0], direction=x[1], total_cost=self.total_cost + x[2], parent_node=self) \
+                    for x in problem.getSuccessors(self.state) if x[0] not in visited_states]
+            return self._successor
+        def __str__(self):
+            return f"({self.state}, {self.direction}, {self.total_cost}, {self.parent_node != None})"
+        def __repr__(self):
+            return str(self)
+
+    visited_states = set()
+    best_goal_node = None
+    opened_que = util.PriorityQueueWithFunction(lambda x: x.total_cost + heuristic(x.state, problem))
+    opened_que.push(Node(start_state))
+    
+    while not opened_que.isEmpty():
+        node = opened_que.pop()
+        if node.state in visited_states:
+            continue
+        visited_states.add(node.state)
+        if best_goal_node != None and node.total_cost >= best_goal_node.total_cost:
+            continue
+        successor_nodes = node.successor_nodes(visited_states)
+
+        for s_node in successor_nodes:
+            if problem.isGoalState(s_node.state) and (best_goal_node == None or s_node.total_cost < best_goal_node.total_cost):
+                best_goal_node = s_node
+            else:
+                opened_que.push(s_node)
+
+    movements = []
+    curr_node = best_goal_node
+    while curr_node.parent_node != None:
+        movements.append(curr_node.direction)
+        curr_node = curr_node.parent_node
+    movements.reverse()
+    return movements
     util.raiseNotDefined()
 
 
